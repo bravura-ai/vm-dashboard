@@ -2,7 +2,7 @@ const CONFIG = {
   // MSAL configuration — clientId will be updated after Entra ID app registration
   msal: {
     auth: {
-      clientId: 'PLACEHOLDER-UPDATE-AFTER-APP-REGISTRATION',
+      clientId: 'd1ad912f-a083-4449-8b12-92fde5c9d7db',
       authority: 'https://login.microsoftonline.com/44c8266a-ac5b-4499-9611-66018108683a',
       redirectUri: window.location.origin,
     },

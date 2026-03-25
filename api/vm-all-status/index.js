@@ -1,18 +1,7 @@
 const { VM_WHITELIST, STATUS_ONLY_VMS } = require('../shared/config');
 
 module.exports = async function (context, req) {
-  // Require authentication
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
-  if (!token) {
-    context.res = {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Authorization required' }),
-    };
-    return;
-  }
+  // No auth required for viewing status — function key protects the upstream API
 
   const baseUrl = process.env.VM_TASK_BASE_URL;
   const functionKey = process.env.VM_TASK_FUNCTION_KEY;

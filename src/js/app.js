@@ -6,7 +6,6 @@ let currentExtendVm = null;
 var pendingVms = {}; // { vmName: { action: 'start'|'stop', pollTimer: id } }
 
 async function refreshAll() {
-  if (!currentAccount) return;
 
   try {
     document.getElementById('last-refresh').textContent = 'Refreshing...';

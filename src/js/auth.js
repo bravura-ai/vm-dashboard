@@ -3,29 +3,31 @@
 const msalInstance = new msal.PublicClientApplication(CONFIG.msal);
 
 let currentAccount = null;
+var isEmbedded = window.self !== window.top;
 
 async function initAuth() {
+  if (isEmbedded) {
+    document.body.classList.add('embedded');
+  }
+
   await msalInstance.handleRedirectPromise();
 
-  // 1. Check if already have a cached account (page refresh)
+  // Check for cached account
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) {
     currentAccount = accounts[0];
     onLoginSuccess();
-    return;
   }
 
-  // 2. Try SSO silent — reuses existing Microsoft session (e.g. from SharePoint)
-  try {
-    var ssoResponse = await msalInstance.ssoSilent({
-      scopes: CONFIG.apiScopes,
-    });
-    currentAccount = ssoResponse.account;
-    onLoginSuccess();
-    return;
-  } catch (err) {
-    // SSO silent failed — user needs to click Sign In
-    console.log('SSO silent failed, showing sign-in button:', err.errorCode);
+  // Show sign-in banner if not authenticated
+  if (!currentAccount) {
+    var banner = document.getElementById('auth-banner');
+    if (banner) banner.style.display = 'flex';
+  }
+
+  // Always load VM status regardless of auth
+  if (typeof refreshAll === 'function') {
+    refreshAll();
   }
 }
 
@@ -44,14 +46,43 @@ async function login() {
   }
 }
 
+// Called when an action needs auth — ensures user is logged in first
+async function ensureAuth() {
+  if (currentAccount) return true;
+
+  try {
+    // Try SSO silent first
+    var ssoResponse = await msalInstance.ssoSilent({
+      scopes: CONFIG.apiScopes,
+    });
+    currentAccount = ssoResponse.account;
+    onLoginSuccess();
+    return true;
+  } catch (err) {
+    // Fall back to popup
+    try {
+      var popupResponse = await msalInstance.loginPopup({
+        scopes: CONFIG.apiScopes,
+      });
+      currentAccount = popupResponse.account;
+      onLoginSuccess();
+      return true;
+    } catch (err2) {
+      showToast('Sign in required to perform this action', 'error');
+      return false;
+    }
+  }
+}
+
 function logout() {
   msalInstance.logoutPopup().catch(function () {});
   currentAccount = null;
   document.getElementById('user-info').textContent = '';
   document.getElementById('login-btn').style.display = '';
   document.getElementById('logout-btn').style.display = 'none';
-  document.getElementById('vm-grid').innerHTML =
-    '<p class="login-prompt">Please sign in to view VM status.</p>';
+  if (typeof refreshAll === 'function') {
+    refreshAll();
+  }
 }
 
 async function getAccessToken() {
@@ -64,7 +95,6 @@ async function getAccessToken() {
     });
     return response.accessToken;
   } catch (err) {
-    // Silent failed — use popup
     const response = await msalInstance.acquireTokenPopup({
       scopes: CONFIG.apiScopes,
       account: currentAccount,
@@ -78,23 +108,26 @@ function getUserEmail() {
 }
 
 function canControl(vmName) {
-  const email = getUserEmail();
+  var email = getUserEmail();
   if (!email) return false;
-  if (CONFIG.admins.some(a => a.toLowerCase() === email)) return true;
-  const allowed = CONFIG.vmPermissions[vmName];
-  return allowed && allowed.some(a => a.toLowerCase() === email);
+  if (CONFIG.admins.some(function (a) { return a.toLowerCase() === email; })) return true;
+  var allowed = CONFIG.vmPermissions[vmName];
+  return allowed && allowed.some(function (a) { return a.toLowerCase() === email; });
 }
 
 function onLoginSuccess() {
   document.getElementById('user-info').textContent = currentAccount.username;
   document.getElementById('login-btn').style.display = 'none';
   document.getElementById('logout-btn').style.display = '';
+  // Hide the sign-in banner
+  var banner = document.getElementById('auth-banner');
+  if (banner) banner.style.display = 'none';
+  // Re-render to show action buttons now that user is authenticated
   if (typeof refreshAll === 'function') {
     refreshAll();
   }
 }
 
-// Initialize after all scripts have loaded
 window.addEventListener('DOMContentLoaded', function () {
   initAuth();
 });

@@ -20,9 +20,15 @@
     </div>
   </header>
 
+  <!-- Sign-in banner for embedded mode (shown when not authenticated) -->
+  <div id="auth-banner" class="auth-banner" style="display:none">
+    <span>Sign in to start, stop, and manage VMs</span>
+    <button class="btn-sign-in" onclick="login()">Sign In</button>
+  </div>
+
   <main>
     <div class="toolbar">
-      <span id="last-refresh">Sign in to view VM status</span>
+      <span id="last-refresh">Loading...</span>
       <button onclick="refreshAll()">Refresh Now</button>
     </div>
     <div id="vm-grid" class="vm-grid">

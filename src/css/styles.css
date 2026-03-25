@@ -333,6 +333,51 @@ button:hover {
   animation: pulse 1.5s infinite;
 }
 
+/* ===== Auth Banner ===== */
+.auth-banner {
+  background: linear-gradient(135deg, #22C55E, #0EA5E9);
+  color: white;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 500;
+}
+.btn-sign-in {
+  background: white;
+  color: #1a1a2e;
+  border: none;
+  padding: 6px 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-sign-in:hover {
+  background: #f0f0f0;
+}
+
+/* ===== Embedded/SharePoint Mode ===== */
+body.embedded {
+  background: #ffffff;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body.embedded header {
+  display: none;
+}
+body.embedded .toolbar {
+  padding: 8px 16px;
+}
+body.embedded .vm-grid {
+  padding: 0 16px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   header {

@@ -7,10 +7,25 @@ let currentAccount = null;
 async function initAuth() {
   await msalInstance.handleRedirectPromise();
 
+  // 1. Check if already have a cached account (page refresh)
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) {
     currentAccount = accounts[0];
     onLoginSuccess();
+    return;
+  }
+
+  // 2. Try SSO silent — reuses existing Microsoft session (e.g. from SharePoint)
+  try {
+    var ssoResponse = await msalInstance.ssoSilent({
+      scopes: CONFIG.apiScopes,
+    });
+    currentAccount = ssoResponse.account;
+    onLoginSuccess();
+    return;
+  } catch (err) {
+    // SSO silent failed — user needs to click Sign In
+    console.log('SSO silent failed, showing sign-in button:', err.errorCode);
   }
 }
 
@@ -30,7 +45,7 @@ async function login() {
 }
 
 function logout() {
-  msalInstance.logoutPopup().catch(() => {});
+  msalInstance.logoutPopup().catch(function () {});
   currentAccount = null;
   document.getElementById('user-info').textContent = '';
   document.getElementById('login-btn').style.display = '';
@@ -79,5 +94,7 @@ function onLoginSuccess() {
   }
 }
 
-// Initialize on page load
-initAuth();
+// Initialize after all scripts have loaded
+window.addEventListener('DOMContentLoaded', function () {
+  initAuth();
+});

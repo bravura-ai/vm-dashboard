@@ -13,7 +13,7 @@ const CONFIG = {
   },
 
   // Scope for acquiring access token to vm-task API
-  apiScopes: ['api://0b9ebf85-47ea-4c9f-b67a-64f3ed297a4c/user_impersonation'],
+  apiScopes: ['api://0b9ebf85-47ea-4c9f-b67a-64f3ed297a4c/.default'],
 
   // Auto-refresh interval (ms)
   refreshInterval: 30000,

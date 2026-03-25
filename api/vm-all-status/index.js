@@ -24,14 +24,22 @@ module.exports = async function (context, req) {
     const scheduleUrl = `${baseUrl}/shutdown-schedule?code=${encodeURIComponent(functionKey)}&vm_name=${encodeURIComponent(vmName)}&resource_group=${encodeURIComponent(rg)}`;
 
     const [statusRes, scheduleRes] = await Promise.allSettled([
-      fetch(statusUrl, { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch(statusUrl), // status is excluded from Entra auth, function key is sufficient
       fetch(scheduleUrl), // shutdown-schedule doesn't need Entra token
     ]);
 
     let powerState = 'Unknown';
-    if (statusRes.status === 'fulfilled' && statusRes.value.ok) {
-      const data = await statusRes.value.json();
-      powerState = data.PowerState || 'Unknown';
+    let statusError = null;
+    if (statusRes.status === 'fulfilled') {
+      if (statusRes.value.ok) {
+        const data = await statusRes.value.json();
+        powerState = data.PowerState || 'Unknown';
+      } else {
+        const errText = await statusRes.value.text().catch(() => '');
+        statusError = `HTTP ${statusRes.value.status}: ${errText.substring(0, 200)}`;
+      }
+    } else {
+      statusError = statusRes.reason?.message || 'fetch failed';
     }
 
     let autoShutdown = null;
@@ -46,6 +54,7 @@ module.exports = async function (context, req) {
       powerState,
       alwaysOn: STATUS_ONLY_VMS.includes(vmName),
       autoShutdown,
+      statusError,
     };
   });
 

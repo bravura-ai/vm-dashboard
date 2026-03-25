@@ -2,7 +2,7 @@ const { VM_WHITELIST, PROTECTED_ACTIONS, isAuthorized } = require('../shared/con
 
 const VALID_ACTIONS = ['status', 'start', 'stop', 'shutdown-schedule', 'extend-shutdown'];
 // Actions that require Entra ID token forwarded to vm-task
-const ENTRA_ACTIONS = ['status', 'start', 'stop'];
+const ENTRA_ACTIONS = ['start', 'stop', 'extend-shutdown'];
 
 module.exports = async function (context, req) {
   const action = context.bindingData.action;

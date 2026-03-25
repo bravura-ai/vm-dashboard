@@ -325,6 +325,14 @@ button:hover {
   background: var(--btn-danger-hover);
 }
 
+/* ===== Transitioning Label ===== */
+.vm-transitioning-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--state-transition);
+  animation: pulse 1.5s infinite;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   header {

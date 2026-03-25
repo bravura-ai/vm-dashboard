@@ -2,6 +2,8 @@
 
 let refreshTimer = null;
 let currentExtendVm = null;
+// Track VMs that are transitioning (starting/stopping) for fast polling
+var pendingVms = {}; // { vmName: { action: 'start'|'stop', pollTimer: id } }
 
 async function refreshAll() {
   if (!currentAccount) return;
@@ -103,12 +105,82 @@ function confirmAction(action, vmName, rg) {
     try {
       await vmAction(action, vmName, rg);
       showToast(action + ' ' + vmName + ': accepted', 'success');
-      setTimeout(refreshAll, 3000);
+      // Mark VM as transitioning and start fast polling
+      setPendingState(vmName, action);
     } catch (err) {
       showToast('Failed to ' + action + ' ' + vmName + ': ' + err.message, 'error');
     }
   };
   document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function setPendingState(vmName, action) {
+  // Clear any existing poll for this VM
+  if (pendingVms[vmName]) {
+    clearInterval(pendingVms[vmName].pollTimer);
+  }
+
+  var expectedState = action === 'start' ? 'running' : 'deallocated';
+  var label = action === 'start' ? 'Starting...' : 'Stopping...';
+
+  // Immediately update the card to show transitioning state
+  pendingVms[vmName] = { action: action };
+  updateCardState(vmName, label, 'state-transitioning');
+
+  // Poll every 5 seconds until state changes
+  var pollCount = 0;
+  pendingVms[vmName].pollTimer = setInterval(async function () {
+    pollCount++;
+    if (pollCount > 36) { // max 3 minutes of polling
+      clearInterval(pendingVms[vmName].pollTimer);
+      delete pendingVms[vmName];
+      showToast(vmName + ': ' + action + ' is taking longer than expected', 'info');
+      refreshAll();
+      return;
+    }
+    try {
+      var vms = await fetchAllVmStatus();
+      var vm = vms.find(function (v) { return v.name === vmName; });
+      if (vm && vm.powerState && vm.powerState.toLowerCase().includes(expectedState)) {
+        // Reached target state
+        clearInterval(pendingVms[vmName].pollTimer);
+        delete pendingVms[vmName];
+        showToast(vmName + ' is now ' + expectedState, 'success');
+        renderVmGrid(vms);
+        document.getElementById('last-refresh').textContent =
+          'Last refreshed: ' + new Date().toLocaleTimeString();
+      } else if (vm) {
+        // Still transitioning — update all cards with fresh data but keep this one as transitioning
+        renderVmGrid(vms);
+        updateCardState(vmName, label, 'state-transitioning');
+        document.getElementById('last-refresh').textContent =
+          'Last refreshed: ' + new Date().toLocaleTimeString();
+      }
+    } catch (err) {
+      // Ignore poll errors, will retry
+    }
+  }, 5000);
+}
+
+function updateCardState(vmName, stateLabel, stateClass) {
+  // Find the card for this VM and update its state display
+  var cards = document.querySelectorAll('.vm-card');
+  cards.forEach(function (card) {
+    var h3 = card.querySelector('h3');
+    if (h3 && h3.textContent === vmName) {
+      // Update card border color
+      card.className = 'vm-card ' + stateClass;
+      // Update status dot
+      var dot = card.querySelector('.status-dot');
+      if (dot) dot.className = 'status-dot ' + stateClass;
+      // Update state label
+      var stateSpan = card.querySelector('.vm-state');
+      if (stateSpan) stateSpan.textContent = stateLabel;
+      // Remove action buttons while transitioning
+      var actions = card.querySelector('.vm-actions');
+      if (actions) actions.innerHTML = '<span class="vm-transitioning-label">' + stateLabel + '</span>';
+    }
+  });
 }
 
 function closeModal() {

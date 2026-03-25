@@ -11,7 +11,7 @@ on:
 
 jobs:
   build_and_deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') }}
     runs-on: ubuntu-latest
     name: Build and Deploy
     steps:
@@ -24,10 +24,10 @@ jobs:
           action: "upload"
           app_location: "/src"
           api_location: "/api"
-          skip_app_build: true
+          skip_app_build: "true"
 
   close_pull_request:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
     runs-on: ubuntu-latest
     name: Close Pull Request
     steps:

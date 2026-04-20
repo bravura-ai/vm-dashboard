@@ -12,7 +12,7 @@ const VM_WHITELIST = {
 };
 
 // VMs that are 24/7 — no start/stop/extend allowed for anyone
-const STATUS_ONLY_VMS = ['BravuraPlntUnityVM', 'OpenVPN-Gateway'];
+const STATUS_ONLY_VMS = ['OpenVPN-Gateway'];
 
 // Actions that require authorization check (status is open to all authenticated users)
 const PROTECTED_ACTIONS = ['start', 'stop', 'extend-shutdown'];

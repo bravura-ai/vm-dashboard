@@ -28,7 +28,7 @@ const CONFIG = {
     { name: 'BrianShared',        rg: 'Bravura_DV',  ip: '10.0.2.8',  alwaysOn: false },
     { name: 'DamonShared',        rg: 'Bravura_DV',  ip: '10.0.2.9',  alwaysOn: false },
     { name: 'BravuraAI',          rg: 'BravuraAI',   ip: null,         alwaysOn: false },
-    { name: 'BravuraPlntUnityVM', rg: 'Bravura_DV',  ip: '10.0.1.4',  alwaysOn: true },
+    { name: 'BravuraPlntUnityVM', rg: 'Bravura_DV',  ip: '10.0.1.4',  alwaysOn: false },
     { name: 'OpenVPN-Gateway',    rg: 'Bravura_DV',  ip: '10.0.2.7',  alwaysOn: true },
   ],
 
